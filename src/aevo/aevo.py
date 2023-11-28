@@ -54,7 +54,7 @@ class Aevo(Trader):
         return self.web3.eth.contract(address=contract_address, abi=abi)
 
     @staticmethod
-    async def get_instrument_id(token: str) -> tuple[int, int]:
+    async def __get_instrument_id(token: str) -> tuple[int, int]:
         async with ClientSession(headers={"accept": "application/json"}) as session:
             response = await session.get(f'https://api.aevo.xyz/markets?asset={token}&instrument_type=PERPETUAL')
             response_text = await response.json()
@@ -135,7 +135,7 @@ class Aevo(Trader):
     ) -> None:
         is_buy = True if close_side == 'BUY' else False
         limit_price = 115792089237316195423570985008687907853269984665640564039457584007913129639935 if close_side == 'BUY' else 0
-        instrument_id, price_step = await self.get_instrument_id(ticker)
+        instrument_id, price_step = await self.__get_instrument_id(ticker)
         salt = random.randint(0, 10 ** 10)
         timestamp = time.time()
         amount = int(orders_amount * 10 ** 6)
@@ -174,7 +174,7 @@ class Aevo(Trader):
         async with ClientSession(headers={"accept": "application/json"}) as session:
             response = await session.get(f'https://api.aevo.xyz/index?asset={token}')
             response_text = await response.json()
-        instrument_id, price_step = await self.get_instrument_id(token)
+        instrument_id, price_step = await self.__get_instrument_id(token)
         price = float(response_text['price'])
         token_amount = balance / price
         salt = random.randint(0, 10 ** 10)

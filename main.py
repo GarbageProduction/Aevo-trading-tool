@@ -4,7 +4,6 @@ import asyncio
 from asyncio import (
     create_task,
     gather,
-    sleep,
     run,
 )
 
@@ -18,9 +17,7 @@ from config import (
     USE_PERCENTAGE,
     OPEN_POSITIONS,
     DEPOSIT_AMOUNT,
-    LEVERAGE,
     TOKEN,
-
 )
 
 
