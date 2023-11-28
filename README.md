@@ -17,7 +17,7 @@ Provides convenient interaction with Aevo using a private key
 
 5. Selecting the leverage of the deal
 
-6. Deleting a key API
+6. Deleting a API key 
 
 
 ---
