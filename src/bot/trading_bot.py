@@ -121,10 +121,6 @@ class Trader(User, ABC):
         """Creates API Key and API Secret"""
 
     @abstractmethod
-    async def set_random_token(self) -> str:
-        """Sets random token to trade with"""
-
-    @abstractmethod
     async def get_positions(
             self,
             headers: Dict[str, str]

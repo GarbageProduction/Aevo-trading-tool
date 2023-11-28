@@ -71,13 +71,6 @@ class Aevo(Trader):
         api_keys = [api_key['api_key'] for api_key in response_text['api_keys']]
         return api_keys
 
-    async def set_random_token(self) -> str:
-        async with ClientSession(headers={"accept": "application/json"}) as session:
-            response = await session.get('https://api.aevo.xyz/assets')
-            response_text = await response.json()
-        random_token = random.choice(response_text)
-        return random_token
-
     async def balance(
             self,
             headers: Dict[str, str]
