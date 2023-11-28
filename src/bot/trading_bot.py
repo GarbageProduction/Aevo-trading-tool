@@ -52,8 +52,8 @@ class Trader(User, ABC):
         self.use_percentage = use_percentage
         self.deposit_percentage = deposit_percentage
         self.withdraw = WITHDRAW
-        self.withdraw_all = WITHDRAW_ALL
         self.withdraw_percentage = WITHDRAW_PERCENTAGE
+        self.withdraw_all = WITHDRAW_ALL
 
         super().__init__(private_key)
 
