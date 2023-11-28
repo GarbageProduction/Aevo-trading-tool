@@ -29,4 +29,4 @@ The program is designed for quick entry into a position if you don't have time t
 <h2>Settings</h2>
 
 To configure modules you need to go to the file config.py. 
-Inside there will be information on each variable
+Inside there will be information on each variable.
