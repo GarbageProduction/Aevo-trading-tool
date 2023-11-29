@@ -4,8 +4,8 @@ import random
 import time
 
 from typing import (
+    Awaitable,
     Optional,
-    Union,
     Dict,
     List,
 )
@@ -119,11 +119,19 @@ class Aevo(Trader):
         tx.update({'maxFeePerGas': await self.web3.eth.gas_price})
         tx.update({'maxPriorityFeePerGas': await self.web3.eth.gas_price})
         gas_limit = await self.web3.eth.estimate_gas(tx)
+        fee = await self.__get_deposit_fee(gas_limit)
+        tx.update({'value': int(fee * 1.1)})
         tx.update({'gas': gas_limit})
         tx_hash = await self.sign_transaction(tx)
         logger.success(
             f'Successfully deposited {amount / 10 ** 6} USDC tokens | TX: https://arbiscan.io/tx/{tx_hash}'
         )
+
+    async def __get_deposit_fee(self, msg_gas_limit: int) -> Awaitable[int]:
+        return await self.contract.functions.getMinFees(
+            self.web3.to_checksum_address('0x69Adf49285c25d9f840c577A0e3cb134caF944D3'),
+            msg_gas_limit
+        ).call()
 
     async def close_position(
             self,
