@@ -19,7 +19,9 @@ from src.bot.trading_bot import Trader
 from config import LEVERAGE
 
 from src.bot.utils.data_exctractor import (
+    sign_staking_withdraw,
     sign_withdraw,
+    sign_staking,
     sign_order,
 )
 
@@ -216,6 +218,73 @@ class Aevo(Trader):
 
         logger.success(
             f'Successfully opened {"LONG" if is_buy is True else "SHORT"} position for {eth_amount} {token} with {leverage} LEVERAGE. AVG Price: {avg_price} | [{self.wallet_address}]')
+
+    async def stake_usdc(
+            self,
+            headers: Dict[str, str],
+            amount: float
+    ) -> None:
+        stake_amount = int(amount * 10 ** 6)
+        collateral = '0x643aaB1618c600229785A5E06E4b2d13946F7a1A'
+        to = '0xceB3d89ed0fBF2acEBFf36E2FB23DACb79BaF9e7'
+        salt = random.randint(0, 10 ** 10)
+        signature = sign_staking(self.web3, self.private_key, collateral, to, stake_amount, salt)
+        payload = {
+            'account': self.wallet_address,
+            'collateral': collateral,
+            'to': to,
+            'amount': str(stake_amount),
+            'salt': str(salt),
+            'signature': signature,
+            'label': 'YV_DEPOSIT',
+        }
+        async with ClientSession(headers=headers) as session:
+            response = await session.post('https://api.aevo.xyz/transfer', json=payload)
+            response_text = await response.json()
+        if response.status != 200:
+            logger.error(f'Something went wrong: {response_text}')
+            return
+        logger.success(f'Successfully staked {stake_amount / 10 ** 6} USDC | [{self.wallet_address}]')
+
+    async def get_staking_balance(
+            self,
+            headers: Dict[str, str]
+    ) -> float:
+        async with ClientSession(headers=headers) as session:
+            response = await session.get('https://api.aevo.xyz/account')
+            response_text = await response.json()
+        collaterals = response_text['collaterals']
+        for collateral in collaterals:
+            if collateral['collateral_asset'] == 'aeUSD':
+                staked_balance = float(collateral['balance'])
+                return staked_balance
+
+    async def withdraw_staking(
+            self,
+            headers: Dict[str, str],
+            amount: float
+    ) -> None:
+        collateral = '0xceB3d89ed0fBF2acEBFf36E2FB23DACb79BaF9e7'
+        to = '0xceB3d89ed0fBF2acEBFf36E2FB23DACb79BaF9e7'
+        salt = random.randint(0, 10 ** 10)
+        withdraw_amount = int(amount * 10 ** 6)
+        signature = sign_staking_withdraw(self.web3, self.private_key, collateral, to, withdraw_amount, salt)
+        payload = {
+            'account': self.wallet_address,
+            'collateral': collateral,
+            'to': to,
+            'amount': withdraw_amount,
+            'salt': salt,
+            'signature': signature,
+            'label': 'YV_WITHDRAW',
+        }
+        async with ClientSession(headers=headers) as session:
+            response = await session.post('https://api.aevo.xyz/transfer', json=payload)
+            response_text = await response.json()
+        if response.status != 200:
+            logger.error(f'Something went wrong: {response_text}')
+            return
+        logger.success(f'Successfully withdrawn {withdraw_amount / 10 ** 6} USDC | [{self.wallet_address}]')
 
     async def withdraw_from_aevo(
             self,

@@ -19,7 +19,6 @@ def get_signatures(
         wallet_address: str,
         account: Account
 ) -> tuple[str, SignedMessage, str]:
-
     new_acc = web3.eth.account.create()
     signing_key = new_acc.address
     signing_private = new_acc.key.hex()
@@ -88,7 +87,6 @@ def sign_withdraw(
         socket_msg_gas_limit: int,
         socket_connector: str
 ) -> str:
-
     data = encode(
         ["uint256", "uint256", "address"],
         [socket_fees, socket_msg_gas_limit, socket_connector]
@@ -124,6 +122,78 @@ def sign_withdraw(
     return signature
 
 
+def sign_staking_withdraw(
+        web3: AsyncWeb3,
+        private_key: str,
+        collateral: str,
+        to: str,
+        amount: int,
+        salt: int
+) -> str:
+    key_signature = web3.eth.account.sign_typed_data(
+        domain_data={
+            "name": "Aevo Mainnet",
+            "version": "1",
+            "chainId": 1,
+        },
+        message_types={
+            "Transfer": [
+                {"name": "collateral", "type": "address"},
+                {"name": "to", "type": "address"},
+                {"name": "amount", "type": "uint256"},
+                {"name": "salt", "type": "uint256"}
+            ]
+        },
+        message_data={
+            "collateral": web3.to_checksum_address(collateral),
+            "to": web3.to_checksum_address(to),
+            "amount": str(amount),
+            "salt": str(salt),
+        },
+        private_key=private_key
+
+    )
+
+    signature = key_signature.signature.hex()
+    return signature
+
+
+def sign_staking(
+        web3: AsyncWeb3,
+        private_key: str,
+        collateral: str,
+        to: str,
+        amount: int,
+        salt: int
+) -> str:
+    key_signature = web3.eth.account.sign_typed_data(
+        domain_data={
+            "name": "Aevo Mainnet",
+            "version": "1",
+            "chainId": 42161,
+        },
+        message_types={
+            "Transfer": [
+                {"name": "collateral", "type": "address"},
+                {"name": "to", "type": "address"},
+                {"name": "amount", "type": "uint256"},
+                {"name": "salt", "type": "uint256"}
+            ]
+        },
+        message_data={
+            "collateral": web3.to_checksum_address(collateral),
+            "to": web3.to_checksum_address(to),
+            "amount": str(amount),
+            "salt": str(salt),
+        },
+        private_key=private_key
+
+    )
+
+    signature = key_signature.signature.hex()
+    return signature
+
+
 def sign_order(
         wallet_address: Address,
         private_key: str,
@@ -134,7 +204,6 @@ def sign_order(
         timestamp: float,
         instrument_id: int
 ) -> SignedMessage:
-
     order_struct = Order(
         maker=wallet_address,
         isBuy=is_buy,

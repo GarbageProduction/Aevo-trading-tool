@@ -19,11 +19,20 @@ from src.bot.utils.data_exctractor import get_signatures
 from src.client.user import User
 
 from config import (
+    USE_PERCENTAGE_WITHDRAW_STAKE,
+    WITHDRAW_STAKING_PERCENTAGE,
+    WITHDRAW_STAKING_AMOUNT,
+    USE_PERCENTAGE_STAKE,
+    WITHDRAW_ALL_STAKING,
     WITHDRAW_PERCENTAGE,
+    WITHDRAW_STAKING,
+    STAKE_PERCENTAGE,
     delete_api_keys,
+    STAKE_AMOUNT,
     WITHDRAW_ALL,
     WITHDRAW,
     DEPOSIT,
+    STAKE,
     TOKEN,
     SIDE,
 )
@@ -81,6 +90,28 @@ class Trader(User, ABC):
                     break
                 await sleep(30)
 
+        if STAKE:
+            stake_amount = STAKE_AMOUNT
+            if USE_PERCENTAGE_STAKE:
+                staking_percentage = STAKE_PERCENTAGE
+                stake_amount = aevo_balance * staking_percentage
+            await self.stake_usdc(self.headers, stake_amount)
+
+        if WITHDRAW_STAKING:
+            staked_balance = await self.get_staking_balance(self.headers)
+            if staked_balance == 0:
+                logger.error(f'Your staked balance is 0 | [{self.wallet_address}]')
+                return
+
+            withdraw_amount = WITHDRAW_STAKING_AMOUNT
+            if WITHDRAW_ALL_STAKING:
+                withdraw_amount = staked_balance
+
+            if USE_PERCENTAGE_WITHDRAW_STAKE:
+                withdraw_percentage = WITHDRAW_STAKING_PERCENTAGE
+                withdraw_amount = staked_balance * withdraw_percentage
+            await self.withdraw_staking(self.headers, withdraw_amount)
+
         if self.open_positions:
             token = TOKEN
             await self.open_position(aevo_balance, SIDE, self.headers, token=token)
@@ -126,6 +157,29 @@ class Trader(User, ABC):
             headers: Dict[str, str]
     ) -> tuple[float, float, int, Optional[str], str]:
         """Gets all current orders"""
+
+    @abstractmethod
+    async def get_staking_balance(
+            self,
+            headers: Dict[str, str]
+    ) -> float:
+        """Gets total staked balance"""
+
+    @abstractmethod
+    async def stake_usdc(
+            self,
+            headers: Dict[str, str],
+            amount: float
+    ) -> None:
+        """Staking USDC on AEVO"""
+
+    @abstractmethod
+    async def withdraw_staking(
+            self,
+            headers: Dict[str, str],
+            amount: float
+    ) -> None:
+        """Withdraws from staking"""
 
     @abstractmethod
     async def open_position(
