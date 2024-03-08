@@ -1,4 +1,4 @@
-aiohttp==3.8.6
+aiohttp==3.9.2
 eth_account==0.10.0
 eth_utils==2.2.0
 loguru==0.7.2
